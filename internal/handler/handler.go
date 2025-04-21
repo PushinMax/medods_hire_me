@@ -26,7 +26,7 @@ func (h *Handler) Init() *gin.Engine {
 	protected := router.Group("/protected")
 	{
 		protected.Use(h.JWTAuth())
-		protected.POST("/mail", h.setEmail)
+		protected.PATCH("/mail", h.setEmail)
 	}
 	unsafeApi := router.Group("/unsafe")
 	{

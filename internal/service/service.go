@@ -1,6 +1,7 @@
 package service
 
 import (
+	"medods_hire_me/internal/blacklist"
 	"medods_hire_me/internal/mailer"
 	"medods_hire_me/internal/repository"
 	"medods_hire_me/internal/utils"
@@ -19,9 +20,9 @@ type Service struct {
 	AuthApi
 }
 
-func New(repos *repository.Repository, mailer *mailer.Mailer) *Service {
+func New(repos *repository.Repository, mailer *mailer.Mailer, blacklist *blacklist.Blacklist) *Service {
 	return &Service{
-		AuthApi: newApiService(repos, mailer),
+		AuthApi: newApiService(repos, mailer, blacklist),
 	}
 }
 

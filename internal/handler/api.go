@@ -57,7 +57,7 @@ func (h *Handler) setEmail(c *gin.Context) {
 	}
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid request body")})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Invalid request body")})
 		return
 	}
 	err := h.services.SetEmail(userID.(string), request.Email)

@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/base64"
 	"log"
+	"medods_hire_me/internal/blacklist"
 	"medods_hire_me/internal/mailer"
 	"medods_hire_me/internal/repository"
 	"medods_hire_me/internal/utils"
@@ -24,9 +25,10 @@ type ApiService struct {
 	repo repository.RepoApi
 	cfg  JWTConfig
 	mailer mailer.MailApi
+	blacklist blacklist.BlacklistApi
 }
 
-func newApiService(repo repository.RepoApi, mailer mailer.MailApi) *ApiService {
+func newApiService(repo repository.RepoApi, mailer mailer.MailApi, blacklist blacklist.BlacklistApi) *ApiService {
 	accessExpiry, _ := time.ParseDuration(viper.GetString("jwt.access_expiry"))
 	refreshExpiry, _ := time.ParseDuration(viper.GetString("jwt.refresh_expiry"))
 	return &ApiService{
@@ -37,6 +39,7 @@ func newApiService(repo repository.RepoApi, mailer mailer.MailApi) *ApiService {
 			RefreshExpiry: refreshExpiry,
 		},
 		mailer: mailer,
+		blacklist: blacklist,
 	}
 }
 
@@ -81,6 +84,9 @@ func (s *ApiService) IssueToken(userID, ip string) (*utils.TokenPairResponse, er
 	); err != nil {
 		return nil, fmt.Errorf("token save failed: %w", err)
 	}
+	if err := s.blacklist.Add(jti, ip); err != nil {
+		return nil, fmt.Errorf("BlackList: %w", err)
+	}
 
 	return &utils.TokenPairResponse{
 		AccessToken:  accessToken,
@@ -109,10 +115,14 @@ func (s *ApiService) RefreshToken(refreshToken, accessToken, ip string) (*utils.
 			if err != nil {
 				log.Printf("User %s did not specify email.", rawAccessToken.Subject)
 			}
-			s.mailer.Send(email, "Warning", "A suspicious transaction has been detected. The above token was accessed by IP:" + rawAccessToken.IP)
+			s.mailer.Send(email, "Warning", "A suspicious transaction has been detected. The above token was accessed by IP:" + ip)
 			return nil, errors.New("the token is not provided for your IP")
 		}
 		return nil, fmt.Errorf("TokenVerification: %s", err.Error())
+	}
+
+	if err := s.blacklist.Delete(rawAccessToken.JTI); err != nil {
+		return nil, fmt.Errorf("BlackList: %s", err.Error())
 	}
 	return s.IssueToken(rawAccessToken.Subject, ip)
 }

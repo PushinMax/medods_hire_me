@@ -1,6 +1,7 @@
 package main
 
 import (
+	"medods_hire_me/internal/blacklist"
 	"medods_hire_me/internal/handler"
 	"medods_hire_me/internal/mailer"
 	"medods_hire_me/internal/repository"
@@ -38,7 +39,8 @@ func main() {
 	
 	repository := repository.New(db)
 	mailer := mailer.New()
-	service := service.New(repository, mailer)
+	blacklist := blacklist.New()
+	service := service.New(repository, mailer, blacklist)
 	handler := handler.New(service)
 
 	
@@ -67,7 +69,7 @@ func InitConfig() error {
 		return err
 	}
 	viper.SetConfigName("config")
-	viper.AddConfigPath(".")   
+	viper.AddConfigPath(".") 
     viper.SetConfigType("yml")
 	return viper.ReadInConfig()
 }
