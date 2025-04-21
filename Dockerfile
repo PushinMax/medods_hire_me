@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24.1-alpine AS builder
 
 WORKDIR /app
 
@@ -7,12 +7,18 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /medods cmd/medods/main.go
+COPY migrations ./migrations
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o /medods ./cmd/medods/main.go
 
 FROM alpine:latest
 
-COPY --from=builder /medods /medods
+COPY --from=builder /medods .
 
-# EXPOSE 8080
+COPY configs/config.yml . 
+COPY .env .
 
-CMD ["/medods"]
+
+EXPOSE 8080
+
+CMD ["./medods"]

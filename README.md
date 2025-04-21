@@ -1,11 +1,13 @@
 # medods_hire_me
 
+## **Генерация .env файла**
+```bash
+sh scripts/genetate-env.sh
+```
 
 ## **Запуск**
 ```bash
-docker build -t medods-server .
-
-docker run -p 8080:8080 medods-server
+docker compose up -d --build
 ```
 
 ## **Подключиться к БД**
